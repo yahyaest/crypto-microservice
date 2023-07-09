@@ -1,0 +1,53 @@
+version: '3.5'
+services:
+  crypto:
+    container_name: crypto
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+  
+  prisma-studio:
+    container_name: prisma-studio
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 5555:5555
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    command: npx prisma studio
+
+  postgres:
+    image: postgres:14.8
+    container_name: postgres
+    restart: unless-stopped
+    # user: postgres
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_USER=crypto
+      - POSTGRES_PASSWORD=crypto
+      - POSTGRES_DB=crypto
+    volumes:
+      - postgres-crypto:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - 9090:8080
+    restart: unless-stopped
+volumes:
+  postgres-crypto:

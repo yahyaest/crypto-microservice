@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Coin {
+  id                 Int               @id @default(autoincrement())
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  symbol             String            @unique
+  name               String
+  price              String
+  rank               Int?
+  description        String?            
+  iconUrl            String?
+  websiteUrl         String?
+  coinrankingUrl     String?
+  marketCap          String?
+  lastDayVolume      String?   //24hVolume
+  numberOfMarkets    Int?
+  numberOfExchanges  Int?
+  allTimeHigh        Json?   // {"price": "544.2163032022543", "timestamp": 1637625600}
+}
+
+model Transaction {
+  id                 Int               @id @default(autoincrement())
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  action             Action
+  type               TransactionType   @default(CRYPTO)
+  username           String
+  wallet             String
+  name               String
+  symbol             String
+  unit_price         String          
+  value              String
+  amount             Int
+}
+
+enum Action {
+  BUY
+  SELL
+}
+
+enum TransactionType {
+  CRYPTO
+  STOCK
+  FOREX
+}
