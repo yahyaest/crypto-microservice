@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class CreateTransactionDto {
   @IsString()
@@ -8,6 +8,7 @@ export class CreateTransactionDto {
   action: 'BUY' | 'SELL';
 
   @IsString()
+  @IsEmail()
   username: string;
 
   @IsString()

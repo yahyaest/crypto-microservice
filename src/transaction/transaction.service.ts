@@ -18,6 +18,12 @@ export class TransactionService {
     return await this.prisma.transaction.findUnique({ where: { id: +id } });
   }
 
+  async getUserTransactions(email: string, wallet: string) {
+    return await this.prisma.transaction.findMany({
+      where: { username: email, type: 'CRYPTO', wallet },
+    });
+  }
+
   async addTransaction(body: CreateTransactionDto) {
     return await this.prisma.transaction.create({ data: body });
   }

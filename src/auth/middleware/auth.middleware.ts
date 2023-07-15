@@ -55,8 +55,9 @@ export class CryptoAuthMiddleware implements NestMiddleware {
       req['user'] = user;
 
       next();
-    } catch (error) {
-      console.log(error.response.data);
+    }catch (error) {
+      if(error.response) console.log(error.response.data);
+      else  console.log(error);
       throw new UnauthorizedException();
     }
   }

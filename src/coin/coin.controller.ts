@@ -86,7 +86,6 @@ export class CoinController {
       return await this.coinService.addCoin(createCoinDto);
     } catch (error) {
       console.log(error);
-      console.log(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
