@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTransactionDto } from './dto';
 import { CoinService } from 'src/coin/coin.service';
+import { TransactionType } from '@prisma/client';
 
 @Injectable()
 export class TransactionService {
@@ -20,7 +21,7 @@ export class TransactionService {
     const transactions = await this.prisma.transaction.findMany({
       where: query,
     });
-    if (coinImage==='true' ) {
+    if (coinImage === 'true') {
       for (let transaction of transactions) {
         const coin = await this.coinService.getCoinsWithParams({
           name: transaction.name,
@@ -36,13 +37,17 @@ export class TransactionService {
     return await this.prisma.transaction.findUnique({ where: { id: +id } });
   }
 
-  async getUserTransactions(email: string, wallet: string) {
+  async getUserWalletTransactions(email: string, wallet: string, type: TransactionType) {
     return await this.prisma.transaction.findMany({
-      where: { username: email, type: 'CRYPTO', wallet },
+      where: { username: email, type , wallet },
     });
   }
 
   async addTransaction(body: CreateTransactionDto) {
     return await this.prisma.transaction.create({ data: body });
+  }
+
+  async removeTransaction(id: string) {
+    return await this.prisma.transaction.delete({ where: { id: +id } });
   }
 }

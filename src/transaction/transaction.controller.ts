@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Query,
   Req,
@@ -14,6 +16,7 @@ import { TransactionService } from './transaction.service';
 import { DataAccessGuard } from 'src/auth/guard';
 import { CustomRequest } from 'src/auth/interface/request.interface';
 import { CustomLogger } from 'src/myLogger';
+import { TransactionType } from '@prisma/client';
 
 @Controller('api/transactions')
 export class TransactionController {
@@ -35,15 +38,31 @@ export class TransactionController {
     }
   }
 
+  @Get('/:id')
+  async getTransaction(@Param('id') id: string) {
+    try {
+      const transaction = await this.transactionService.getTransaction(id);
+      if (!transaction) {
+        throw new Error('Transaction not found');
+      }
+
+      return transaction;
+    } catch (error) {
+      this.logger.error(`Failed to retrieve transaction: ${error.message}`);
+      throw new HttpException('Transaction not found', HttpStatus.NOT_FOUND);
+    }
+  }
+
   @Post('/user_assets')
-  async getUserTransactionss(
-    @Body() payload: { email: string; wallet: string },
+  async getUserTransactionsAssets(
+    @Body() payload: { email: string; wallet: string; type: TransactionType },
   ) {
     try {
       const userTransactions =
-        await this.transactionService.getUserTransactions(
+        await this.transactionService.getUserWalletTransactions(
           payload.email,
           payload.wallet,
+          payload.type,
         );
       let userAssets: { name: string; symbol: string }[] = [];
       for (let transaction of userTransactions) {
@@ -78,4 +97,19 @@ export class TransactionController {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
+
+  @Delete('/:id')
+  async deletetRANSACTION(@Param('id') id: string) {
+    try {
+      const transaction = await this.transactionService.removeTransaction(id);
+      if (!transaction) {
+        throw new Error('Transaction not found');
+      }
+      return transaction;
+    } catch (error) {
+      this.logger.error(`Failed to retrieve transaction: ${error.message}`);
+      throw new HttpException('Transaction not found', HttpStatus.NOT_FOUND);
+    }
+  }
 }
+
