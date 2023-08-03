@@ -35,6 +35,10 @@ export class UpdateCoinDto {
 
   @IsString()
   @IsOptional()
+  coinrankingId?: string;
+
+  @IsString()
+  @IsOptional()
   marketCap?: string;
 
   @IsString()

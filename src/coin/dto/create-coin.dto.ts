@@ -32,6 +32,10 @@ export class CreateCoinDto {
 
   @IsString()
   @IsOptional()
+  coinrankingId: string;
+
+  @IsString()
+  @IsOptional()
   marketCap: string;
 
   @IsString()

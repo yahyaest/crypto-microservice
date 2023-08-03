@@ -22,6 +22,7 @@ model Coin {
   iconUrl            String?
   websiteUrl         String?
   coinrankingUrl     String?
+  coinrankingId      String?
   marketCap          String?
   lastDayVolume      String?   //24hVolume
   numberOfMarkets    Int?

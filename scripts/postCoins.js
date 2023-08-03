@@ -36,14 +36,62 @@ const postCoins = async () => {
         iconUrl: coin.iconUrl,
         websiteUrl: coin.websiteUrl,
         coinrankingUrl: coin.coinrankingUrl,
+        coinrankingId: coin.uuid,
         marketCap: coin.marketCap,
         lastDayVolume: coin['24hVolume'],
         numberOfMarkets: coin.numberOfMarkets,
         numberOfExchanges: coin.numberOfExchanges,
-        allTimeHigh: coin.allTimeHigh,
+        allTimeHigh: JSON.stringify(coin.allTimeHigh),
       };
-      console.log(`Posting coin ${coin.name} with rank ${coin.rank}`);
+      console.log(
+        `Posting coin ${coin.name}: ${coin.symbol} with rank ${coin.rank}`,
+      );
       await axios.post('http://localhost:3000/api/coins', coinBody);
+    }
+  } catch (error) {
+    //console.log(error);
+    console.log(error.response.data);
+  }
+};
+
+const patchCoins = async () => {
+  try {
+    // get coins from coinranking
+    const api_key =
+      'coinranking6ec81f6096754540faabae42469f5cb945f9652a5b92c509';
+
+    const options = {
+      headers: {
+        'x-access-token': api_key,
+      },
+    };
+
+    const response = await axios.get(
+      'https://api.coinranking.com/v2/coins?limit=100',
+      options,
+    );
+    const coins = response.data.data.coins;
+
+    let dbCoins = await axios.get('http://localhost:3000/api/coins');
+
+    // patch db coins
+    for (let dbCoin of dbCoins.data) {
+      try {
+        const remoreCoin = coins.filter(
+          (c) => c.name === dbCoin.name && c.symbol === dbCoin.symbol,
+        )[0];
+
+        const payload = { coinrankingId: remoreCoin.uuid };
+
+        console.log(`patching coin ${dbCoin.name} with rank ${dbCoin.rank}`);
+        await axios.patch(
+          `http://localhost:3000/api/coins/${dbCoin.id}`,
+          payload,
+        );
+      } catch (error) {
+        console.log(`failed to patch coin ${dbCoin.name} with rank ${dbCoin.rank} reason is :`);
+        console.log(error);
+      }
     }
   } catch (error) {
     console.log(error);
@@ -51,3 +99,4 @@ const postCoins = async () => {
 };
 
 postCoins();
+//patchCoins();

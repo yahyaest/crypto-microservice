@@ -6,13 +6,15 @@ import {
   HttpStatus,
   Param,
   Post,
+  Patch,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CoinService } from './coin.service';
-import { CreateCoinDto } from './dto';
 import { ConfigService } from '@nestjs/config';
-import { getLastestCoinPrice } from 'utils/utils';
+import { CoinService } from './coin.service';
+import { CreateCoinDto, UpdateCoinDto } from './dto';
+import { getCoinChartData, getLastestCoinPrice } from 'utils/utils';
+import { CustomLogger } from 'src/myLogger';
 
 @Controller('api/coins')
 export class CoinController {
@@ -20,14 +22,14 @@ export class CoinController {
     private readonly coinService: CoinService,
     private readonly config: ConfigService,
   ) {}
+  private readonly logger = new CustomLogger(CoinController.name);
 
   @Get('')
-
   async getCoins(@Query() query: any) {
     try {
       return await this.coinService.getCoinsWithParams(query);
     } catch (error) {
-      console.log(`Failed to retrieve coins: ${error.message}`);
+      this.logger.error(`Failed to retrieve coins: ${error.message}`);
       throw new HttpException('No coins found', HttpStatus.NOT_FOUND);
     }
   }
@@ -40,10 +42,10 @@ export class CoinController {
       if (!coin) {
         throw new Error('Coin not found');
       }
-      console.log(`Successfully getting the coin with id ${id}`);
-      console.log(coin);
+      this.logger.log(`Successfully getting the coin with id ${id}`);
+      this.logger.log(JSON.stringify(coin));
       // get coin from coinranking
-      console.log(
+      this.logger.log(
         `Getting coin ${coin.name} from coinranking and patching its price`,
       );
       // const options = {
@@ -58,23 +60,25 @@ export class CoinController {
       // const remoteCoin = response.data.data.coins[0];
       const apiKey = this.config.get('COIN_RANKING_API_KEY');
       const remoteCoinPrice = await getLastestCoinPrice(apiKey, coin);
-      console.log(`Latest coin ${coin.name} price is ${remoteCoinPrice}`);
+      this.logger.log(`Latest coin ${coin.name} price is ${remoteCoinPrice}`);
       // patch coin price
       const newCoin = await this.coinService.updateCoin(`${coin.id}`, {
         price: remoteCoinPrice,
       });
-      console.log(`Coin ${coin.name} after price update`);
-      console.log(newCoin);
+      this.logger.log(`Coin ${coin.name} after price update`);
+      this.logger.log(JSON.stringify(newCoin));
       return newCoin;
     } catch (error) {
       if (error.response) {
-        console.log(`Failed to retrieve coin: ${error.response.data.message}`);
+        this.logger.error(
+          `Failed to retrieve coin: ${error.response.data.message}`,
+        );
         throw new HttpException(
           error.response.data.message,
           error.response.status,
         );
       } else {
-        console.log(`Failed to retrieve coin: ${error.message}`);
+        this.logger.error(`Failed to retrieve coin: ${error.message}`);
         throw new HttpException('Coin not found', HttpStatus.NOT_FOUND);
       }
     }
@@ -85,8 +89,40 @@ export class CoinController {
     try {
       return await this.coinService.addCoin(createCoinDto);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Patch('/:id')
+  async updateCoin(
+    @Param('id') id: string,
+    @Body() updateCoinDto: UpdateCoinDto,
+  ) {
+    try {
+      return await this.coinService.updateCoin(id, updateCoinDto);
+    } catch (error) {
+      this.logger.error(error);
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get('/:id/history')
+  async getCoinChartData(@Param('id') id: string, @Query() query: any) {
+    try {
+      const coinrankingApiKey = this.config.get('COIN_RANKING_API_KEY');
+      const polygonApiKey = this.config.get('POLYGON_API_KEY');
+      const coin = await this.coinService.getCoin(id);
+      const chartData = await getCoinChartData(
+        coinrankingApiKey,
+        polygonApiKey,
+        coin,
+        query.duration,
+      );
+      return chartData;
+    } catch (error) {
+      this.logger.error(error);
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 }
