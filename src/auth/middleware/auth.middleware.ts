@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthenticatedUser } from '../interface/auth.interface';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { CustomLogger } from 'src/myLogger';
 
 @Injectable()
 export class CryptoAuthMiddleware implements NestMiddleware {
@@ -15,6 +16,7 @@ export class CryptoAuthMiddleware implements NestMiddleware {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
   ) {}
+  private readonly logger = new CustomLogger(CryptoAuthMiddleware.name);
 
   async use(req: Request, res: Response, next: NextFunction) {
     try {
@@ -32,7 +34,7 @@ export class CryptoAuthMiddleware implements NestMiddleware {
       const userMail = payload.email;
       const gatewayBaseUrl = this.config.get('GATEWAY_BASE_URL');
       const checkUserByEmailUrl = `${gatewayBaseUrl}/api/users/is_user`;
-      console.log(`Checking user with email ${userMail} existance in gataway`);
+      this.logger.log(`Checking user with email ${userMail} existance in gataway`);
       const options = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -45,8 +47,10 @@ export class CryptoAuthMiddleware implements NestMiddleware {
       );
       is_user = is_user.data;
 
-      if (!is_user){
-        throw new Error(`Invalid token. User with email${userMail} doesn't exist`)
+      if (!is_user) {
+        throw new Error(
+          `Invalid token. User with email${userMail} doesn't exist`,
+        );
       }
 
       const user: AuthenticatedUser = payload;
@@ -55,9 +59,9 @@ export class CryptoAuthMiddleware implements NestMiddleware {
       req['user'] = user;
 
       next();
-    }catch (error) {
-      if(error.response) console.log(error.response.data);
-      else  console.log(error);
+    } catch (error) {
+      if (error.response) this.logger.error(error.response.data);
+      else this.logger.error(error);
       throw new UnauthorizedException();
     }
   }

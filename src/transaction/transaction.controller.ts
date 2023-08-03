@@ -13,10 +13,12 @@ import { CreateTransactionDto } from './dto';
 import { TransactionService } from './transaction.service';
 import { DataAccessGuard } from 'src/auth/guard';
 import { CustomRequest } from 'src/auth/interface/request.interface';
+import { CustomLogger } from 'src/myLogger';
 
 @Controller('api/transactions')
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
+  private readonly logger = new CustomLogger(TransactionController.name);
 
   @Get('')
   @UseGuards(DataAccessGuard)
@@ -28,7 +30,7 @@ export class TransactionController {
       }
       return await this.transactionService.getTransactionsWithParams(query);
     } catch (error) {
-      console.log(`Failed to retrieve transactions: ${error.message}`);
+      this.logger.error(`Failed to retrieve transactions: ${error.message}`);
       throw new HttpException('No transactions found', HttpStatus.NOT_FOUND);
     }
   }
@@ -57,7 +59,7 @@ export class TransactionController {
       }
       return userAssets;
     } catch (error) {
-      console.log(
+      this.logger.error(
         `Failed to retrieve transactions for user with email ${payload.email} and wallet ${payload.wallet}. \n ERROR: ${error.message}`,
       );
       throw new HttpException(
@@ -72,7 +74,7 @@ export class TransactionController {
     try {
       return await this.transactionService.addTransaction(createTransactionDto);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
