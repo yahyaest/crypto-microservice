@@ -10,7 +10,17 @@ export class CoinService {
     return await this.prisma.coin.findMany();
   }
 
-  async getCoinsWithParams(query: Object) {
+  async getCoinsWithParams(query: any) {
+    // handle query data by days
+    if (query.days) {
+      const now = new Date();
+      now.setDate(now.getDate() - query.days);
+      query.createdAt = {
+        gte: now.toISOString(), // Greater than or equal to query.days  ago
+        lte: new Date().toISOString(), // Less than or equal to today
+      };
+      delete query.days;
+    }
     return await this.prisma.coin.findMany({ where: query });
   }
 

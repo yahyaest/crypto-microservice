@@ -15,9 +15,19 @@ export class TransactionService {
     return await this.prisma.transaction.findMany();
   }
 
-  async getTransactionsWithParams(query: Object) {
+  async getTransactionsWithParams(query: any) {
     const coinImage = query['coinImage'];
     delete query['coinImage'];
+    // handle query data by days
+    if (query.days) {
+      const now = new Date();
+      now.setDate(now.getDate() - query.days);
+      query.createdAt = {
+        gte: now.toISOString(), // Greater than or equal to query.days  ago
+        lte: new Date().toISOString(), // Less than or equal to today
+      };
+      delete query.days;
+    }
     const transactions = await this.prisma.transaction.findMany({
       where: query,
     });
