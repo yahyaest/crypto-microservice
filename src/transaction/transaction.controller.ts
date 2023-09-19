@@ -39,17 +39,21 @@ export class TransactionController {
   }
 
   @Get('/:id')
-  async getTransaction(@Param('id') id: string) {
+  @UseGuards(DataAccessGuard)
+  async getTransaction(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
+      const user = req.user;
       const transaction = await this.transactionService.getTransaction(id);
       if (!transaction) {
         throw new Error('Transaction not found');
       }
-
+      if (user.email !== transaction.username && user.role !== 'ADMIN') {
+        throw new Error('Transaction belong to another user');
+      }
       return transaction;
     } catch (error) {
       this.logger.error(`Failed to retrieve transaction: ${error.message}`);
-      throw new HttpException('Transaction not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -99,17 +103,22 @@ export class TransactionController {
   }
 
   @Delete('/:id')
-  async deletetRANSACTION(@Param('id') id: string) {
+  @UseGuards(DataAccessGuard)
+  async deleteTransaction(@Param('id') id: string, @Req() req: CustomRequest) {
     try {
-      const transaction = await this.transactionService.removeTransaction(id);
+      const user = req.user;
+      const transaction = await this.transactionService.getTransaction(id);
       if (!transaction) {
         throw new Error('Transaction not found');
       }
+      if (user.email !== transaction.username && user.role !== 'ADMIN') {
+        throw new Error('Transaction belong to another user');
+      }
+      await this.transactionService.removeTransaction(id);
       return transaction;
     } catch (error) {
       this.logger.error(`Failed to retrieve transaction: ${error.message}`);
-      throw new HttpException('Transaction not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 }
-

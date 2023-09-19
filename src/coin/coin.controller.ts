@@ -15,7 +15,10 @@ import { CoinService } from './coin.service';
 import { CreateCoinDto, UpdateCoinDto } from './dto';
 import { getCoinChartData, getLastestCoinPrice } from 'utils/utils';
 import { CustomLogger } from 'src/myLogger';
+import { RolesGuard } from 'src/auth/guard';
+import { Roles } from 'src/auth/decorator';
 
+@UseGuards(RolesGuard)
 @Controller('api/coins')
 export class CoinController {
   constructor(
@@ -95,6 +98,7 @@ export class CoinController {
   }
 
   @Patch('/:id')
+  @Roles('ADMIN')
   async updateCoin(
     @Param('id') id: string,
     @Body() updateCoinDto: UpdateCoinDto,
