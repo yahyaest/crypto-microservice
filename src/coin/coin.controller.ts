@@ -37,6 +37,16 @@ export class CoinController {
     }
   }
 
+  @Get('/list')
+  async getCoinsNameList(){
+    try {
+      return await this.coinService.getCoinsNameList();
+    } catch (error) {
+      this.logger.error(`Failed to retrieve coins: ${error.message}`);
+      throw new HttpException('No coins found', HttpStatus.NOT_FOUND);
+    }
+  }
+
   @Get('/:id')
   async getCoin(@Param('id') id: string) {
     try {

@@ -28,6 +28,14 @@ export class CoinService {
     return await this.prisma.coin.findUnique({ where: { id: +id } });
   }
 
+  async getCoinsNameList() {
+    const coinsList = [];
+    (await this.prisma.coin.findMany({orderBy: {rank : "asc"}})).map((coin) =>
+      coinsList.push({name : coin.name , icon : coin.iconUrl}),
+    );
+    return coinsList;
+  }
+
   async addCoin(body: CreateCoinDto) {
     return await this.prisma.coin.create({ data: body });
   }
