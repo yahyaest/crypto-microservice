@@ -32,9 +32,11 @@ export class CryptoAuthMiddleware implements NestMiddleware {
 
       // Check token validity in gateway by checking user exitance based on its email extracted from token payload
       const userMail = payload.email;
-      const gatewayBaseUrl = this.config.get('GATEWAY_BASE_URL');
+      const gatewayBaseUrl = this.config.get('BASE_URL');
       const checkUserByEmailUrl = `${gatewayBaseUrl}/api/users/is_user`;
-      this.logger.log(`Checking user with email ${userMail} existance in gataway`);
+      this.logger.log(
+        `Checking user with email ${userMail} existance in gataway`,
+      );
       const options = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,8 +62,14 @@ export class CryptoAuthMiddleware implements NestMiddleware {
 
       next();
     } catch (error) {
-      if (error.response) this.logger.error(error.response.data);
-      else this.logger.error(error);
+      if (error.response)
+        this.logger.error(
+          `Crypto Auth Middleware : Failed to authorize incoming request : ERROR : ${error.response.data}`,
+        );
+      else if (error.response)
+        this.logger.error(
+          `Crypto Auth Middleware : Failed to authorize incoming request : ERROR : ${error}`,
+        );
       throw new UnauthorizedException();
     }
   }
